@@ -3,14 +3,15 @@
 Scrape UW-Parkside catalog course descriptions and generate SQL inserts.
 
 Default target table:
-  public.courses(subject, number, title, credits, description, prereq_text)
+  public.courses(subject, number, title, credits, description, prereq_text, offered_terms)
+  (Use --offered-column to match your column name.)
 
 Optional prereq output (if you create):
   public.course_prereqs(course_id, prereq_text)
 
 Usage:
   python scrape_uwp_catalog.py \
-    --url "https://catalog.uwp.edu/course-descriptions/csci/" \
+    --url "https://catalog.uwp.edu/azindex/" --recursive \
     --out courses.sql
 
 Optional prereq output:
@@ -22,6 +23,7 @@ Notes:
     "CSCI 241 | Computer Science I | 5 cr"
     description paragraph
     "Prerequisites: ..."
+    "Offered: ..."
 """
 
 from __future__ import annotations
@@ -45,6 +47,7 @@ class Course:
     credits: float
     description: str
     prereq_text: Optional[str] = None
+    offered_text: Optional[str] = None
 
 
 HEADER_RE = re.compile(
@@ -55,6 +58,7 @@ HEADER_RE = re.compile(
 PREREQ_RE = re.compile(
     r"^\s*(Prerequisites?|Prereqs?)\s*:?\s*(.*)\s*$", re.IGNORECASE
 )
+OFFERED_RE = re.compile(r"^\s*Offered\s*:?\s*(.*)\s*$", re.IGNORECASE)
 
 
 def sql_escape_literal(s: str) -> str:
@@ -82,6 +86,11 @@ def _clean_prereq_text(text: str) -> Optional[str]:
     if cleaned.lower() in {"none", "no", "n/a", "na"}:
         return None
     return cleaned
+
+
+def _clean_offered_text(text: str) -> Optional[str]:
+    cleaned = normalize_ws(text)
+    return cleaned or None
 
 
 def parse_courseblock(block: Tag) -> Optional[Course]:
@@ -126,6 +135,7 @@ def parse_courseblock(block: Tag) -> Optional[Course]:
 
     description = ""
     prereq_text: Optional[str] = None
+    offered_text: Optional[str] = None
 
     desc_parts: List[str] = []
 
@@ -135,6 +145,7 @@ def parse_courseblock(block: Tag) -> Optional[Course]:
         lines = [normalize_ws(x) for x in raw.split("\n") if normalize_ws(x)]
         # Heuristic: description is usually first paragraph(s) until a line that starts with "Prerequisites:"
         pending_prereq = False
+        pending_offered = False
         for line in lines:
             pm = PREREQ_RE.match(line)
             if pm:
@@ -144,9 +155,21 @@ def parse_courseblock(block: Tag) -> Optional[Course]:
                 else:
                     pending_prereq = True
                 continue
+            om = OFFERED_RE.match(line)
+            if om:
+                content = om.group(1).strip()
+                if content:
+                    offered_text = _clean_offered_text(content)
+                else:
+                    pending_offered = True
+                continue
             if pending_prereq:
                 prereq_text = _clean_prereq_text(line)
                 pending_prereq = False
+                continue
+            if pending_offered:
+                offered_text = _clean_offered_text(line)
+                pending_offered = False
                 continue
             # ignore other catalog metadata if you want (e.g., "Offered: Fall")
             desc_parts.append(line)
@@ -161,6 +184,10 @@ def parse_courseblock(block: Tag) -> Optional[Course]:
             pm = PREREQ_RE.match(text)
             if pm:
                 prereq_text = _clean_prereq_text(pm.group(2))
+                continue
+            om = OFFERED_RE.match(text)
+            if om:
+                offered_text = _clean_offered_text(om.group(1))
                 continue
             # ignore other labeled metadata
             if text.lower().startswith(("offered:", "meets:", "equiv:", "equivalent:")):
@@ -193,6 +220,16 @@ def parse_courseblock(block: Tag) -> Optional[Course]:
                 prereq_text = _clean_prereq_text(pm.group(2))
                 if prereq_text:
                     break
+    if offered_text is None:
+        for el in block.find_all(["p", "div"]):
+            text = normalize_ws(el.get_text(" ", strip=True))
+            if "Offered" not in text:
+                continue
+            om = OFFERED_RE.match(text)
+            if om:
+                offered_text = _clean_offered_text(om.group(1))
+                if offered_text:
+                    break
 
     return Course(
         subject=subject,
@@ -201,6 +238,7 @@ def parse_courseblock(block: Tag) -> Optional[Course]:
         credits=credits,
         description=description,
         prereq_text=prereq_text,
+        offered_text=offered_text,
     )
 
 
@@ -244,7 +282,7 @@ def parse_courses(html: str) -> List[Course]:
 
 def discover_course_links(index_url: str, html: str) -> List[str]:
     """
-    Discover course description page links from the course-descriptions index page.
+    Discover course description page links from an index-like page.
     Keeps only links under the same /course-descriptions/ path.
     """
     soup = BeautifulSoup(html, "html.parser")
@@ -274,27 +312,39 @@ def discover_course_links(index_url: str, html: str) -> List[str]:
     return uniq
 
 
-def write_courses_sql(courses: List[Course], out_path: str) -> None:
+def is_course_descriptions_index(url: str) -> bool:
+    parsed = urlparse(url)
+    return parsed.path.rstrip("/").endswith("/course-descriptions")
+
+
+def write_courses_sql(courses: List[Course], out_path: str, offered_column: Optional[str]) -> None:
     with open(out_path, "w", encoding="utf-8") as f:
         f.write("-- Generated by scrape_uwp_catalog.py\n")
         f.write("BEGIN;\n\n")
-        f.write(
-            "INSERT INTO public.courses "
-            "(subject, number, title, credits, description, prereq_text)\nVALUES\n"
-        )
+        columns = ["subject", "number", "title", "credits", "description", "prereq_text"]
+        if offered_column:
+            columns.append(offered_column)
+        f.write("INSERT INTO public.courses (" + ", ".join(columns) + ")\nVALUES\n")
 
         values_lines = []
         for c in courses:
             prereq_sql = "NULL"
             if c.prereq_text:
                 prereq_sql = f"'{sql_escape_literal(c.prereq_text)}'"
+            offered_sql = "NULL"
+            if offered_column and c.offered_text:
+                offered_sql = f"'{sql_escape_literal(c.offered_text)}'"
             values_lines.append(
-                f"('{sql_escape_literal(c.subject)}',"
-                f"'{sql_escape_literal(c.number)}',"
-                f"'{sql_escape_literal(c.title)}',"
-                f"{c.credits},"
-                f"'{sql_escape_literal(c.description)}',"
-                f"{prereq_sql})"
+                (
+                    f"('{sql_escape_literal(c.subject)}',"
+                    f"'{sql_escape_literal(c.number)}',"
+                    f"'{sql_escape_literal(c.title)}',"
+                    f"{c.credits},"
+                    f"'{sql_escape_literal(c.description)}',"
+                    f"{prereq_sql}"
+                    + (f",{offered_sql}" if offered_column else "")
+                    + ")"
+                )
             )
 
         f.write(",\n".join(values_lines))
@@ -345,6 +395,11 @@ def main() -> None:
         default=None,
         help="Optional output SQL file for prereqs (requires separate table).",
     )
+    ap.add_argument(
+        "--offered-column",
+        default="offered_terms",
+        help="Column name on public.courses to store offered seasons (default: offered_terms). Use empty string to omit.",
+    )
     ap.add_argument("--sleep", type=float, default=0.0, help="Optional delay after fetch (seconds).")
     ap.add_argument(
         "--recursive",
@@ -353,10 +408,26 @@ def main() -> None:
     )
     args = ap.parse_args()
 
+    offered_column = (args.offered_column or "").strip() or None
+
     courses: List[Course] = []
     if args.recursive:
         index_html = fetch_html(args.url)
         links = discover_course_links(args.url, index_html)
+        expanded_links: List[str] = []
+        for link in links:
+            if is_course_descriptions_index(link):
+                html = fetch_html(link)
+                expanded_links.extend(discover_course_links(link, html))
+            else:
+                expanded_links.append(link)
+        links = []
+        seen = set()
+        for link in expanded_links:
+            if link in seen:
+                continue
+            seen.add(link)
+            links.append(link)
         if not links:
             raise SystemExit("No course description links found on index page.")
         for link in links:
@@ -382,7 +453,7 @@ def main() -> None:
 
     courses.sort(key=sort_key)
 
-    write_courses_sql(courses, args.out)
+    write_courses_sql(courses, args.out, offered_column)
     print(f"Wrote {len(courses)} course inserts -> {args.out}")
 
     if args.out_prereqs:

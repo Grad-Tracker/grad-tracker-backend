@@ -22,6 +22,7 @@ def test_parse_courses_from_courseblocks():
           <div class="courseblockdesc">
             <p>Introduction to programming.</p>
             <p>Prerequisites: CSCI 140 and MATH 221.</p>
+            <p>Offered: Fall, Spring.</p>
           </div>
         </div>
         <div class="courseblock">
@@ -45,6 +46,7 @@ def test_parse_courses_from_courseblocks():
     assert c1.credits == 5.0
     assert "Introduction to programming." in c1.description
     assert c1.prereq_text == "CSCI 140 and MATH 221."
+    assert c1.offered_text == "Fall, Spring."
 
     c2 = courses[1]
     assert c2.subject == "CSCI"
@@ -53,6 +55,7 @@ def test_parse_courses_from_courseblocks():
     assert c2.credits == 3.0
     assert "Special topics." in c2.description
     assert c2.prereq_text == "Consent of instructor."
+    assert c2.offered_text is None
 
 
 def test_parse_courses_new_uwp_layout():
@@ -75,6 +78,9 @@ def test_parse_courses_new_uwp_layout():
           <span><strong>Prerequisites:</strong> None.</span>
         </p>
       </div>
+      <div class="noindent">
+        <p class="courseblockextra noindent">Offered: Occasionally.</p>
+      </div>
     </div>
     """
 
@@ -87,6 +93,7 @@ def test_parse_courses_new_uwp_layout():
     assert c.credits == 3.0
     assert "Explores computer components." in c.description
     assert c.prereq_text == "None."
+    assert c.offered_text == "Occasionally."
 
 
 def test_parse_courseblock_returns_none_for_unmatched_header():

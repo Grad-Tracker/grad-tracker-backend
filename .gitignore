@@ -34,3 +34,6 @@ build/
 *.sqlite3
 
 node_modules/
+
+program_requirements.json
+programs_skipped.txt

@@ -4,3 +4,5 @@ supabase
 pytest
 requests 
 beautifulsoup4
+requests
+bs4

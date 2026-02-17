@@ -37,3 +37,4 @@ node_modules/
 
 program_requirements.json
 programs_skipped.txt
+*.csv

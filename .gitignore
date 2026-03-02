@@ -35,6 +35,7 @@ build/
 
 node_modules/
 
-program_requirements.json
+*.json
 programs_skipped.txt
+masters_programs_skipped.txt
 *.csv

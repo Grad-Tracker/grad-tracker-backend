@@ -75,7 +75,6 @@ def ensure_course_id(sb, subject: str, number: str) -> int:
         "title": f"{subject} {number} (stub)",
         "credits": 0,
         "description": "Placeholder created from cross-listed reference.",
-        "prereq_text": None,
     }
     resp2 = (
         sb.table("courses")

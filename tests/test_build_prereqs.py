@@ -47,3 +47,26 @@ def test_parse_expr_builds_and_or_tree():
     # AND has higher precedence, so top-level op should be OR
     assert expr.op == "OR"
     assert len(expr.children) == 2
+
+
+def test_prereq_to_tokens_maps_standing_admission_and_minimums():
+    text = "Junior standing and admission to nursing program and minimum GPA of 2.5 and completion of a minimum of 60 credits."
+    tokens = prereq_to_tokens(text)
+    assert "TEST(CLASS_STANDING 3)" in tokens
+    assert "TEST(PROGRAM_ADMISSION_NURSING 1)" in tokens
+    assert "MINGPA(2.5)" in tokens
+    assert "TEST(CREDITS_EARNED 60)" in tokens
+
+
+def test_prereq_to_tokens_course_specific_min_grade_token():
+    text = "Prerequisites: CSCI 241 with C or better."
+    tokens = prereq_to_tokens(text)
+    assert "COURSE(CSCI,241):MIN_GRADE=C" in tokens
+
+
+def test_parse_expr_handles_parens_and_unmatched_closing():
+    tokens = ["(", "COURSE(CSCI,241)", "OR", "COURSE(MATH,221)", ")", "AND", "COURSE(CSCI,242)", ")"]
+    expr = parse_expr(tokens)
+    assert expr is not None
+    assert expr.op == "AND"
+    assert len(expr.children) == 2

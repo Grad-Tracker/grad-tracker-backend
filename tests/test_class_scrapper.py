@@ -10,7 +10,17 @@ if str(SRC) not in sys.path:
 
 import pytest
 
-from class_scrapper import fetch_html, parse_courses, parse_courseblock, sql_escape_literal  # noqa: E402
+from class_scrapper import (  # noqa: E402
+    _clean_offered_text,
+    _clean_prereq_text,
+    discover_course_links,
+    fetch_html,
+    is_course_descriptions_index,
+    parse_courseblock,
+    parse_courses,
+    parse_offered_terms,
+    sql_escape_literal,
+)
 
 
 def test_parse_courses_from_courseblocks():
@@ -113,6 +123,55 @@ def test_parse_courseblock_returns_none_for_unmatched_header():
 
 def test_sql_escape_literal_quotes():
     assert sql_escape_literal("O'Reilly") == "O''Reilly"
+
+
+def test_parse_offered_terms_handles_special_cases_and_even_odd():
+    assert parse_offered_terms("Fall (odd years), Spring (even years), Winterim, Yearly, Occasionally.") == [
+        "OCCASIONALLY",
+        "YEARLY",
+        "WINTERIM",
+        "FALL_ODD",
+        "SPRING_EVEN",
+    ]
+    assert parse_offered_terms("Fall, Spring, Summer.") == ["FALL", "SPRING", "SUMMER"]
+    assert parse_offered_terms(None) == []
+
+
+def test_discover_course_links_and_index_detection():
+    html = """
+    <a href="/course-descriptions/csci/">CSCI</a>
+    <a href="https://catalog.uwp.edu/course-descriptions/math/">MATH</a>
+    <a href="/not-course-descriptions/">Ignore</a>
+    <a href="mailto:test@example.com">Mail</a>
+    <a href="/course-descriptions/csci/">Duplicate</a>
+    """
+    links = discover_course_links("https://catalog.uwp.edu/course-descriptions/", html)
+    assert links == [
+        "https://catalog.uwp.edu/course-descriptions/csci/",
+        "https://catalog.uwp.edu/course-descriptions/math/",
+    ]
+    assert is_course_descriptions_index("https://catalog.uwp.edu/course-descriptions/")
+    assert not is_course_descriptions_index("https://catalog.uwp.edu/course-descriptions/csci/")
+
+
+def test_clean_text_helpers():
+    assert _clean_prereq_text(" none ") is None
+    assert _clean_prereq_text(" CSCI 241 ") == "CSCI 241"
+    assert _clean_offered_text("  Fall, Spring.  ") == "Fall, Spring."
+    assert _clean_offered_text("   ") is None
+
+
+def test_parse_courses_fallback_header_parser_and_dedupes():
+    html = """
+    <html><body>
+      <div>CSCI 241 | Computer Science I | 5 cr</div>
+      <div>CSCI 241 | Computer Science I | 5 cr</div>
+      <div>MATH 221 | Calculus I | 5 cr</div>
+    </body></html>
+    """
+    courses = parse_courses(html)
+    assert len(courses) == 2
+    assert {(c.subject, c.number) for c in courses} == {("CSCI", "241"), ("MATH", "221")}
 
 
 @pytest.mark.integration

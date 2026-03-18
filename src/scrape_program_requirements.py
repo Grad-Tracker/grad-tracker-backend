@@ -18,6 +18,7 @@ Notes:
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import re
 import time
@@ -84,6 +85,8 @@ MANUAL_REQUIREMENT_RE = re.compile(
     re.IGNORECASE,
 )
 
+SPECIAL_TOPICS_RE = re.compile(r"\bspecial topics?\b|\bvaries by topic\b", re.IGNORECASE)
+
 
 @dataclass
 class Block:
@@ -116,6 +119,29 @@ def fetch_html(url: str, timeout: int = 30) -> str:
 
 def normalize_ws(text: str) -> str:
     return re.sub(r"\s+", " ", text or "").strip()
+
+
+def normalize_text_value(text: str) -> str:
+    t = normalize_ws(text)
+    t = re.sub(r"\s+([,;:])", r"\1", t)
+    t = re.sub(r"\(\s+", "(", t)
+    t = re.sub(r"\s+\)", ")", t)
+    # Keep short abbreviation endings (e.g., "U.S.") intact.
+    if t.endswith(".") and not re.search(r"(?:\b[A-Z]{1,4}\.)$", t):
+        t = t[:-1].rstrip()
+    return t
+
+
+def standardize_program_name(name: str) -> str:
+    return normalize_text_value(name)
+
+
+def classify_manual_reason(note: str, credits_required: Optional[float], has_courses: bool) -> str:
+    if credits_required is not None and not has_courses:
+        return "credits_only"
+    if SPECIAL_TOPICS_RE.search(note or ""):
+        return "special_topics"
+    return "non_explicit"
 
 
 def parse_catalog_year(soup: BeautifulSoup) -> Optional[str]:
@@ -442,6 +468,7 @@ def parse_major_requirements(
     current_text_parts: List[str] = []
 
     def ensure_block(name: str) -> Block:
+        name = normalize_text_value(name)
         if name not in blocks:
             blocks[name] = Block(
                 name=name, courses=[], rule=rule_all, manual_notes=[], option_groups=[]
@@ -815,10 +842,26 @@ def get_course_id(sb, subject: str, number: str, cache: Dict[Tuple[str, str], Op
         f"select course {subject} {number}",
     )
     row = sb_one(resp, f"select course {subject} {number}")
-    if not row:
+    if row:
+        cid = int(row["id"])
+        cache[key] = cid
+        return cid
+
+    # Fallback via canonical alias map
+    resp_alias = execute_with_retry(
+        lambda: sb.table("course_code_aliases")
+        .select("course_id")
+        .eq("subject", subject)
+        .eq("number", number)
+        .limit(1)
+        .execute(),
+        f"select alias course {subject} {number}",
+    )
+    row_alias = sb_one(resp_alias, f"select alias course {subject} {number}")
+    if not row_alias:
         cache[key] = None
         return None
-    cid = int(row["id"])
+    cid = int(row_alias["course_id"])
     cache[key] = cid
     return cid
 
@@ -835,15 +878,18 @@ def insert_block_course(sb, block_id: int, course_id: int) -> None:
         raise RuntimeError(f"insert block_course {block_id} {course_id}: {resp.error}")
 
 
-def insert_programs(sb, programs: List[Program]) -> None:
+def insert_programs(sb, programs: List[Program], out_missing_courses: Optional[str]) -> None:
     course_cache: Dict[Tuple[str, str], Optional[int]] = {}
     missing_courses: List[Tuple[str, str]] = []
     blocks_processed = 0
     courses_inserted = 0
 
     for p in programs:
-        program_id = get_or_create_program(sb, p.name, p.catalog_year, p.program_type)
+        program_name = standardize_program_name(p.name)
+        program_id = get_or_create_program(sb, program_name, p.catalog_year, p.program_type)
         for b in p.blocks:
+            b.name = normalize_text_value(b.name)
+            b.manual_notes = [normalize_text_value(n) for n in (b.manual_notes or [])]
             block_id = get_or_create_block(
                 sb, program_id, b.name, b.rule, b.n_required, b.credits_required
             )
@@ -950,6 +996,9 @@ def insert_programs(sb, programs: List[Program]) -> None:
                         {
                             "block_id": block_id,
                             "flag_type": "MANUAL_REQUIREMENT",
+                            "manual_reason": classify_manual_reason(
+                                note_trim, b.credits_required, bool(b.courses)
+                            ),
                             "note": note_trim,
                         }
                     )
@@ -961,6 +1010,22 @@ def insert_programs(sb, programs: List[Program]) -> None:
                 )
                 if getattr(resp, "error", None):
                     raise RuntimeError(f"insert block flags {block_id}: {resp.error}")
+            elif b.credits_required is not None and not b.courses:
+                # Explicitly track credits-only blocks as manual requirements.
+                payload = {
+                    "block_id": block_id,
+                    "flag_type": "MANUAL_REQUIREMENT",
+                    "manual_reason": "credits_only",
+                    "note": "Credits-only requirement",
+                }
+                resp = execute_with_retry(
+                    lambda: sb.table("program_requirement_block_flags")
+                    .upsert(payload, on_conflict="block_id,flag_type,note")
+                    .execute(),
+                    f"insert credits-only block flag {block_id}",
+                )
+                if getattr(resp, "error", None):
+                    raise RuntimeError(f"insert credits-only block flag {block_id}: {resp.error}")
 
     if missing_courses:
         uniq = sorted(set(missing_courses))
@@ -969,6 +1034,12 @@ def insert_programs(sb, programs: List[Program]) -> None:
             print(f"  - {subj} {num}")
         if len(uniq) > 50:
             print(f"  ... and {len(uniq) - 50} more")
+        if out_missing_courses:
+            with open(out_missing_courses, "w", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+                writer.writerow(["subject", "number"])
+                writer.writerows(uniq)
+            print(f"Wrote missing courses -> {out_missing_courses}")
 
     print(f"Blocks processed: {blocks_processed}")
     print(f"Block courses inserted: {courses_inserted}")
@@ -1013,6 +1084,8 @@ def main() -> None:
     ap.add_argument("--out-json", default="program_requirements.json", help="Output JSON file.")
     ap.add_argument("--out-sql", default=None, help="Optional output SQL file.")
     ap.add_argument("--out-report", default="program_requirements_report.json", help="Report JSON file.")
+    ap.add_argument("--out-missing-courses", default="missing_courses_undergrad.csv", help="CSV for missing course codes.")
+    ap.add_argument("--out-manual-blocks", default="manual_blocks_undergrad.csv", help="CSV for manual/non-explicit blocks.")
     ap.add_argument("--insert-db", action="store_true", help="Insert results into the database.")
     ap.add_argument("--skip-reset", action="store_true", help="Skip resetting program tables before insert.")
     ap.add_argument("--reset-only", action="store_true", help="Reset program tables and exit.")
@@ -1095,6 +1168,8 @@ def main() -> None:
     # Report
     report = {
         "programs": len(programs),
+        "skipped_count": len(skipped),
+        "skipped_programs": skipped,
         "blocks_total": sum(len(p.blocks) for p in programs),
         "blocks_empty_courses": [
             {
@@ -1117,6 +1192,7 @@ def main() -> None:
             for b in p.blocks
             for n in (b.manual_notes or [])
         ],
+        "unparseable_elements_count": sum(len(b.manual_notes or []) for p in programs for b in p.blocks),
         "rules": {
             "ALL_OF": sum(1 for p in programs for b in p.blocks if b.rule == "ALL_OF"),
             "ANY_OF": sum(1 for p in programs for b in p.blocks if b.rule == "ANY_OF"),
@@ -1127,6 +1203,12 @@ def main() -> None:
     with open(args.out_report, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2)
     print(f"Wrote report -> {args.out_report}")
+    with open(args.out_manual_blocks, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["program", "catalog_year", "block", "note"])
+        for row in report["manual_requirements"]:
+            writer.writerow([row["program"], row["catalog_year"], row["block"], row["note"]])
+    print(f"Wrote manual blocks -> {args.out_manual_blocks}")
 
     if args.insert_db or args.reset_only:
         sb = get_connection()
@@ -1135,7 +1217,7 @@ def main() -> None:
         if args.reset_only:
             print("Reset complete.")
             return
-        insert_programs(sb, programs)
+        insert_programs(sb, programs, args.out_missing_courses)
 
 
 if __name__ == "__main__":

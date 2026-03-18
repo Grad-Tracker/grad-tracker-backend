@@ -36,6 +36,7 @@ build/
 node_modules/
 
 *.json
+*.ini
 programs_skipped.txt
 masters_programs_skipped.txt
 *.csv

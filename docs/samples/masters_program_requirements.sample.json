@@ -1,0 +1,267 @@
+[
+  {
+    "name": "Master of Science in Applied Biotechnology",
+    "catalog_year": "2019-2021",
+    "url": "https://www.uwp.edu/learn/academiccatalog/2019-2021/msabt.cfm",
+    "program_type": "GRADUATE",
+    "blocks": [
+      {
+        "name": "Requirements for the Master of Applied Biotechnology (31 credits)",
+        "courses": [
+          [
+            "ABT",
+            "700"
+          ],
+          [
+            "ABT",
+            "705"
+          ],
+          [
+            "ABT",
+            "710"
+          ],
+          [
+            "ABT",
+            "715"
+          ],
+          [
+            "ABT",
+            "720"
+          ],
+          [
+            "ABT",
+            "725"
+          ],
+          [
+            "ABT",
+            "735"
+          ],
+          [
+            "ABT",
+            "740"
+          ],
+          [
+            "ABT",
+            "745"
+          ],
+          [
+            "ABT",
+            "750"
+          ],
+          [
+            "ABT",
+            "755"
+          ],
+          [
+            "ABT",
+            "760"
+          ],
+          [
+            "ABT",
+            "765"
+          ],
+          [
+            "ABT",
+            "770"
+          ],
+          [
+            "ABT",
+            "775"
+          ],
+          [
+            "ABT",
+            "789"
+          ],
+          [
+            "ABT",
+            "790"
+          ]
+        ],
+        "rule": "N_OF",
+        "n_required": 1,
+        "credits_required": null,
+        "manual_notes": []
+      }
+    ]
+  },
+  {
+    "name": "Applied Professional Studies (MA)",
+    "catalog_year": "2025-2026",
+    "url": "https://catalog.uwp.edu/graduate-programs-policies/applied-professional-studies-ma/",
+    "program_type": "GRADUATE",
+    "blocks": [
+      {
+        "name": "Required Core Courses",
+        "courses": [
+          [
+            "MAPS",
+            "700"
+          ],
+          [
+            "MAPS",
+            "701"
+          ],
+          [
+            "MAPS",
+            "702"
+          ],
+          [
+            "MAPS",
+            "703"
+          ],
+          [
+            "MAPS",
+            "705"
+          ]
+        ],
+        "rule": "ALL_OF",
+        "n_required": null,
+        "credits_required": null,
+        "manual_notes": []
+      },
+      {
+        "name": "Concentration Area Courses",
+        "courses": [],
+        "rule": "N_OF",
+        "n_required": 1,
+        "credits_required": 30.0,
+        "manual_notes": []
+      },
+      {
+        "name": "Required Courses",
+        "courses": [
+          [
+            "MAPS",
+            "720"
+          ],
+          [
+            "MAPS",
+            "721"
+          ],
+          [
+            "MAPS",
+            "741"
+          ],
+          [
+            "MAPS",
+            "640"
+          ]
+        ],
+        "rule": "ALL_OF",
+        "n_required": null,
+        "credits_required": null,
+        "manual_notes": []
+      },
+      {
+        "name": "Elective Courses",
+        "courses": [
+          [
+            "MAPS",
+            "512"
+          ],
+          [
+            "MAPS",
+            "517"
+          ],
+          [
+            "MAPS",
+            "523"
+          ],
+          [
+            "MAPS",
+            "606"
+          ],
+          [
+            "MAPS",
+            "640"
+          ],
+          [
+            "MAPS",
+            "710"
+          ],
+          [
+            "MAPS",
+            "721"
+          ],
+          [
+            "MAPS",
+            "722"
+          ],
+          [
+            "MAPS",
+            "729"
+          ],
+          [
+            "MAPS",
+            "741"
+          ],
+          [
+            "MAPS",
+            "742"
+          ],
+          [
+            "MAPS",
+            "743"
+          ],
+          [
+            "MAPS",
+            "799"
+          ],
+          [
+            "MAPS",
+            "634"
+          ],
+          [
+            "MAPS",
+            "744"
+          ],
+          [
+            "MAPS",
+            "720"
+          ],
+          [
+            "MAPS",
+            "769"
+          ],
+          [
+            "MAPS",
+            "770"
+          ]
+        ],
+        "rule": "N_OF",
+        "n_required": 4,
+        "credits_required": 15.0,
+        "manual_notes": []
+      },
+      {
+        "name": "Content Expertise for Professional Educators",
+        "courses": [],
+        "rule": "N_OF",
+        "n_required": 1,
+        "credits_required": null,
+        "manual_notes": []
+      },
+      {
+        "name": "Required Course",
+        "courses": [
+          [
+            "MAPS",
+            "721"
+          ],
+          [
+            "MAPS",
+            "741"
+          ],
+          [
+            "MAPS",
+            "722"
+          ]
+        ],
+        "rule": "ALL_OF",
+        "n_required": null,
+        "credits_required": null,
+        "manual_notes": []
+      }
+    ]
+  }
+]

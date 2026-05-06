@@ -24,18 +24,23 @@ build/
 *.log
 *.tmp
 *.bak
+.db_dumps/
 
 .vscode/
 .idea/
 
 *.db
 *.sql
+!sql/schema.sql
+!sql/history/*.sql
+!sql/migrations/*.sql
 *.sqlite
 *.sqlite3
 
 node_modules/
 
 *.json
+!docs/samples/*.json
 *.ini
 programs_skipped.txt
 masters_programs_skipped.txt

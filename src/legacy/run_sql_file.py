@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
-Run a SQL file against the Postgres database.
+LEGACY: Run a SQL file through a Supabase RPC function.
+
+This is archived because the current database handoff workflow uses direct
+Postgres tools instead of relying on an exposed SQL RPC.
 
 Uses one of these env vars for the connection string:
   - DATABASE_URL
@@ -14,7 +17,12 @@ Example:
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
+
+SRC_DIR = Path(__file__).resolve().parents[1]
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
 from connection import get_connection
 

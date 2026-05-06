@@ -2,7 +2,5 @@ python-dotenv
 psycopg2
 supabase
 pytest
-requests 
-beautifulsoup4
 requests
-bs4
+beautifulsoup4

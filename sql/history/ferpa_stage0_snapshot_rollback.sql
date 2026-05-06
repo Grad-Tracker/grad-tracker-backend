@@ -1,0 +1,2 @@
+-- Stage 0 rollback is intentionally a no-op.
+-- Snapshot scripts do not mutate state.

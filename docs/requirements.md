@@ -1,43 +1,49 @@
 # Requirement Rules
 
-This document describes how program requirements are represented and interpreted.
+Author: CJ Shane
+
+This document summarizes how program requirements are represented in the current Grad Tracker schema.
 
 ## Core Entities
-- `program_requirement_blocks`: human-readable blocks for a program requirement section.
+
+- `program_requirement_blocks`: human-readable sections for a program.
 - `program_requirement_courses`: flat course links attached to a block.
-- `program_req_sets` / `program_req_nodes` / `program_req_atoms`: tree model for nested logic.
+- `program_req_sets`, `program_req_nodes`, and `program_req_atoms`: tree model for nested `AND`/`OR` logic.
+- `program_requirement_block_flags`: manual review notes for requirements that cannot be safely automated.
 
 ## Rule Meanings
-- `ALL_OF`: student must complete all listed courses in the block.
-- `N_OF`: student must complete at least `n_required` courses from the block.
-- `ANY_OF`: treated as a non-strict recommendation bucket in scraped data.
-- `CREDITS_OF`: credits-based requirement; currently tracked but not fully enforced by credit math.
+
+- `ALL_OF`: the student must complete all listed courses in the block.
+- `N_OF`: the student must complete at least `n_required` courses from the block.
+- `ANY_OF`: flexible choice-like bucket from scraped catalog data.
+- `CREDITS_OF`: credits-based requirement; tracked in the schema, but not fully enforced as credit math everywhere.
 
 ## Tree Logic
-Use tree logic when requirements cannot be represented as a flat list.
+
+Use the tree tables when requirements cannot be represented as a flat list.
 
 Example:
-- Requirement text: `PHYS 201` OR (`CHEM 101` AND `CHEM 103`)
-- Representation:
-  - Root node: `OR`
-  - Child 1: `ATOM(PHYS 201)`
-  - Child 2: `AND`
-  - Child 2 children: `ATOM(CHEM 101)`, `ATOM(CHEM 103)`
+
+- Text: `PHYS 201` OR (`CHEM 101` AND `CHEM 103`)
+- Root node: `OR`
+- Child nodes: `ATOM(PHYS 201)` and `AND`
+- Nested children: `ATOM(CHEM 101)` and `ATOM(CHEM 103)`
 
 ## Manual Requirements
-Some requirement text is intentionally marked manual when it cannot be safely structured.
+
+Some catalog text is intentionally marked manual when it cannot be safely structured.
 
 Examples:
-- Standing-based rules (e.g., junior standing)
-- Advisor/department approval
-- Placement/audition
-- Special topics with variable content
 
-These are recorded in `program_requirement_block_flags` with `flag_type = 'MANUAL_REQUIREMENT'`.
+- advisor or department approval
+- placement, audition, or standing requirements
+- variable special topics
+- requirement text without explicit course codes
 
-## Completion Source of Truth
-- Student completion is based on `student_course_history.completed = true`.
-- Cross-listed equivalence is applied via `course_equivalents`.
-- Program/block outputs are surfaced through:
-  - `student_block_completion`
-  - `student_program_summary`
+Manual cases are recorded in `program_requirement_block_flags`, usually with `manual_reason` and `metadata`.
+
+## Completion Source Of Truth
+
+- Student completion comes from `student_course_history.completed = true`.
+- Cross-listed equivalence is exposed through `course_equivalents`.
+- Program progress is surfaced through `student_block_completion`, `student_block_completion_mv`, and `student_program_summary`.

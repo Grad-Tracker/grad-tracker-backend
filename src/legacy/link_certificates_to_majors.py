@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
-Link certificates to majors based on course overlap.
+LEGACY: Link certificates to majors based on course overlap.
+
+This is archived because it writes to the older `program_major_links` table.
+The current schema uses `major_certificate_mappings`.
 
 Rule:
   - Compute overlap count between each certificate and major by course_id.
@@ -15,7 +18,13 @@ from __future__ import annotations
 
 import argparse
 from collections import defaultdict
+import sys
+from pathlib import Path
 from typing import Dict, List, Set, Tuple
+
+SRC_DIR = Path(__file__).resolve().parents[1]
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
 from connection import get_connection
 

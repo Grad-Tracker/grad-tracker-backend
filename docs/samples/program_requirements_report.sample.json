@@ -1,0 +1,33 @@
+{
+  "programs": 2,
+  "blocks_total": 12,
+  "blocks_empty_courses": [
+    {
+      "program": "Accounting Major (BS)",
+      "catalog_year": "2025-2026",
+      "block": "Fundamental Preparation Courses"
+    },
+    {
+      "program": "Accounting Major (BS)",
+      "catalog_year": "2025-2026",
+      "block": "Business Preparation Courses"
+    },
+    {
+      "program": "Accounting Major (BS)",
+      "catalog_year": "2025-2026",
+      "block": "Business Foundation Core Courses"
+    },
+    {
+      "program": "Accounting Major (BS)",
+      "catalog_year": "2025-2026",
+      "block": "Accounting Courses"
+    }
+  ],
+  "manual_requirements": [],
+  "rules": {
+    "ALL_OF": 10,
+    "ANY_OF": 0,
+    "N_OF": 2,
+    "CREDITS_OF": 0
+  }
+}

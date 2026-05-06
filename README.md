@@ -1,86 +1,67 @@
-# Grad Tracker Database Overview
+# Grad Tracker Backend Database Handoff
 
-This README explains the Grad Tracker database at a high level: what it stores, how the main tables relate, and how to reason about student progress. It is meant to be detailed but not overly technical.
+Author: CJ Shane
 
-## What The Database Tracks
-- Programs (majors, minors, certificates, graduate programs)
-- Courses and their relationships (cross-listings, offerings, prerequisites)
-- Program requirements as blocks of rules
-- Student course history and progress against program requirements
-- Staff and student accounts (with role-based access control)
+This repo contains the backend database scripts, catalog scrapers, validation utilities, and handoff documentation for the Grad Tracker database.
 
-## Core Tables
+## Quick Start
 
-### Programs
-- `programs`  
-  Stores each program and its type (MAJOR, MINOR, CERTIFICATE, GRADUATE).
+1. Create a Python environment and install dependencies.
 
-### Courses
-- `courses`  
-  The catalog of all courses (subject, number, title, credits).
-- `course_crosslistings`  
-  Links courses that are equivalent (e.g., CSCI 380 cross-listed with MIS 328).
-- `course_offerings`  
-  Terms in which a course is offered (one row per course + term).
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
 
-### Requirements (Blocks + Trees)
-- `program_requirement_blocks`  
-  Human-readable blocks like “Required Courses” or “Select one of the following.”
-- `program_requirement_courses`  
-  Flat list of course requirements linked to a block.
+2. Configure environment variables.
 
-Some requirements need richer logic than a flat list. Those are represented in a requirement tree:
-- `program_req_sets`  
-  Root of the requirement tree for a block.
-- `program_req_nodes`  
-  Logical nodes (AND, OR, ATOM) that form the tree.
-- `program_req_atoms`  
-  The actual course references under a node.
+Start from the checked-in example and replace placeholders with real local values.
 
-This allows patterns like:
-- “PHYS 201” OR (“CHEM 101” AND “CHEM 103”)
+```powershell
+Copy-Item .env.example .env
+$env:SUPABASE_URL = "https://..."
+$env:SUPABASE_KEY = "..."
+$env:SOURCE_DATABASE_URL = "postgresql://..."
+$env:LOCAL_ADMIN_DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/postgres"
+$env:LOCAL_TARGET_DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/grad_tracker_rebuild"
+```
 
-### Students
-- `students`  
-  Student profile data linked to auth users.
-- `student_course_history`  
-  Courses taken by students, with completion status and term.
+3. Install local PostgreSQL CLI tools for schema and rebuild workflows: `pg_dump`, `psql`, `createdb`, and `dropdb`.
 
-### Staff
-- `staff`  
-  Staff members with an `is_admin` flag for elevated access.
+4. Run the handoff check.
 
-## How Progress Is Computed
-- `student_block_completion` (view)  
-  Shows completion status for each requirement block per student.
-- `student_program_summary` (view)  
-  Summarizes how many blocks are complete vs. manual/unknown.
+```powershell
+.\scripts\check_handoff.ps1
+```
 
-Rules used:
-- Course completion is based on `student_course_history.completed = true`.
-- Cross-listed courses are treated as equivalent.
-- Blocks with unclear or non-explicit requirements are marked MANUAL.
+## Main Workflows
 
-## Data Quality & Scraping
-Program requirements are scraped from the catalog. The scrapers:
-- Create requirement blocks and course links
-- Detect “select N” or “choose one” logic
-- Record manual/unknown requirements when text is not explicit
-- Output reports for missing courses and skipped lines
+- Export exact live schema only: `.\scripts\export_live_schema.ps1`
+- Export safe reference data only: `.\scripts\export_reference_seed.ps1`
+- Rebuild a fresh local DB: `.\scripts\rebuild_local_db.ps1 -ForceDrop`
+- Restore committed schema into an existing DB: `.\scripts\restore_schema_only.ps1`
+- Restore generated reference seed into an existing DB: `.\scripts\restore_reference_seed.ps1`
+- Validate loaded requirement data: `python scripts/validate_data.py`
 
-## Access Control (RLS)
-Row-level security is enabled on public tables. Policies follow these rules:
-- Regular users can access only their own rows (by `auth_user_id`)
-- Admin staff can access and edit all tables
-- Records without `auth_user_id` are not accessible
+## Repo Map
 
-## Typical Questions This Schema Answers
-- What courses are required for a program?
-- Which requirement blocks are complete for a given student?
-- Which courses are offered in which terms?
-- Are two courses equivalent (cross-listed)?
+- `docs/database-schema-and-data-flow.md`: current schema inventory, table counts, source-to-table mapping, and data flow.
+- `docs/database-scripts-readme.md`: canonical script guide, generated outputs, and when each script should be used.
+- `docs/requirements.md`: requirement rule model and progress-completion notes.
+- `docs/scraping.md` and `docs/class-scraper.md`: scraper-specific notes.
+- `docs/history/` and `docs/audits/`: historical reports and completed audit notes.
+- `scripts/`: current handoff, rebuild, export, restore, validation, and reporting utilities.
+- `src/`: current scraper/build scripts used to populate catalog and requirement reference data.
+- `src/legacy/`: archived scripts that are not part of the current recommended database workflow.
+- `sql/`: schema snapshots and migration/audit SQL. `sql/schema.sql` is generated by `scripts/export_live_schema.ps1`.
 
-## Where To Look Next
-- `DATABASE_CHANGES.md` for technical history
-- `DATABASE_CHANGES_BY_JIRA.md` for change tracking by ticket
-- `DATABASE_HARDENING_TODOS.md` for cleanup and validation work
+## Data Safety
+
+The local rebuild workflow intentionally separates schema from data:
+
+- `schema.sql` contains structure only.
+- `reference_seed.sql` contains safe catalog/reference data only.
+- Student, staff, plan, AI chat, activity log, and notification data are excluded from reference seeds.
+
+Do not run destructive reset or restore commands against production. Use direct Postgres URLs only when the target database and impact are understood.

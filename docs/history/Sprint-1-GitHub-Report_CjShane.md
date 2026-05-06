@@ -1,5 +1,8 @@
 # Sprint 1 GitHub Report - CjShane
 
+Author: CJ Shane
+Status: Historical reference; not the current source of truth.
+
 Repository URL: https://github.com/Grad-Tracker/grad-tracker-backend
 
 PRs Merged During Sprint (2026-02-03 to 2026-02-17)

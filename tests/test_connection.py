@@ -16,8 +16,8 @@ from postgrest.exceptions import APIError  # noqa: E402
 
 
 @pytest.mark.integration
-def test_supabase_users_table_access():
-    """Verify we can query the `users` table."""
+def test_supabase_courses_table_access():
+    """Verify we can query a current public reference table."""
 
     # Load env vars from .env (if present) before checking
     load_dotenv(ROOT / ".env")
@@ -27,12 +27,12 @@ def test_supabase_users_table_access():
 
     client = get_connection()
     try:
-        response = client.table("users").select("*").limit(1).execute()
+        response = client.table("courses").select("id,subject,number").limit(1).execute()
     except APIError as exc:
-        # Skip if the users table doesn't exist in this project
+        # Skip if the current schema is not exposed to the configured REST key.
         msg = str(exc)
         if "PGRST205" in msg or "Could not find the table" in msg:
-            pytest.skip("Supabase 'users' table not found in this project")
+            pytest.skip("Supabase 'courses' table not found in this project")
         raise
 
     # supabase-py v2+ returns APIResponse without an `error` attr on success

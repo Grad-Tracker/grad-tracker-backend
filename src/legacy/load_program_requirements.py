@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """
-Load program_requirements.json into Supabase tables:
+LEGACY: Load program_requirements.json into Supabase tables:
   - programs
   - program_requirement_blocks
   - program_requirement_courses
+
+This is archived because it does not populate the current program requirement
+tree tables or manual flag metadata used by the current scrapers.
 
 Usage:
   python src/load_program_requirements.py --file program_requirements.json
@@ -13,8 +16,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+
+SRC_DIR = Path(__file__).resolve().parents[1]
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
 from connection import get_connection
 

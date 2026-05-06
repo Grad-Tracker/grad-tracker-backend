@@ -1,43 +1,50 @@
 # Scraping Notes
 
-This document summarizes scraper behavior and expected outputs.
+Author: CJ Shane
 
-## Scripts
-- `src/scrape_program_requirements.py` for undergraduate/major/minor/certificate pages.
-- `src/scrape_masters_programs.py` for graduate masters pages.
+This document summarizes current scraper behavior and expected outputs.
 
-## Output Artifacts
-Both scripts produce:
-- `--out-json`: parsed program + block + course payload.
-- `--out-report`: summary report with counts and manual requirement entries.
+## Current Scripts
+
+- `src/class_scrapper.py`: course catalog data.
+- `src/build_crosslistings.py`: course cross-listing relationships.
+- `src/build_prereqs.py`: structured prerequisite trees from `courses.prereq_text`.
+- `src/scrape_program_requirements.py`: undergraduate majors, minors, and certificates.
+- `src/scrape_masters_programs.py`: graduate programs.
+
+## Program Scraper Outputs
+
+Undergraduate and graduate program scrapers can generate:
+
+- `--out-json`: parsed program, block, course, and tree payload.
+- `--out-report`: summary counts and manual requirement entries.
 - `--out-missing-courses`: CSV for course codes not found in `courses`.
 - `--out-manual-blocks`: CSV for non-explicit/manual requirement notes.
+- `--out-sql`: optional SQL output.
 
-## Parsing Rules
-- Detect section headers and split requirement blocks accordingly.
-- Detect `select/choose N` to set `rule = N_OF` and `n_required`.
-- Capture subtotal/total credit rows into `credits_required`.
-- Parse course links and regex course codes.
-- Build OR/AND trees for grouped choices where possible.
-
-## Manual Flagging
-When requirement text is not explicit enough for structured parsing, the scraper records a manual flag in `program_requirement_block_flags`.
-
-Examples:
-- Advisor consent
-- Placement/audition
-- Special topics / variable topic
-- Standing or level-only text
+Generated reports are ignored by git unless a sanitized sample is intentionally placed under `docs/samples/`.
 
 ## Insert Path
+
 When `--insert-db` is used:
-- Programs are created/updated in `programs`.
-- Blocks are inserted into `program_requirement_blocks`.
-- Course links go to `program_requirement_courses`.
-- Requirement tree data goes to `program_req_sets`, `program_req_nodes`, `program_req_atoms`.
-- Manual flags go to `program_requirement_block_flags`.
+
+- programs are created or updated in `programs`
+- blocks are inserted into `program_requirement_blocks`
+- flat course links go to `program_requirement_courses`
+- tree data goes to `program_req_sets`, `program_req_nodes`, and `program_req_atoms`
+- manual flags go to `program_requirement_block_flags`
+
+## Parsing Rules
+
+- Detect section headers and split requirement blocks.
+- Detect `select` or `choose N` language to set `rule = N_OF` and `n_required`.
+- Capture subtotal and total credit rows into `credits_required` where possible.
+- Parse explicit course links and regex course-code references.
+- Build `AND`/`OR` trees for grouped choices where possible.
+- Flag non-explicit requirements for manual review instead of inventing logic.
 
 ## Known Limitations
+
 - Some catalog rows describe requirements without explicit course codes.
-- Some `courses.number` formats are non-standard and are intentionally left as manual review.
-- Credits-based requirements are stored but not fully enforced as credit sums in all contexts.
+- Some requirements depend on standing, placement, audition, advisor approval, or variable topics.
+- Credits-based requirements are tracked but not fully enforced as credit sums in every progress surface.

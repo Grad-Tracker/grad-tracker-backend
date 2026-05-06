@@ -1,0 +1,346 @@
+[
+  {
+    "name": "Accounting Major (BS)",
+    "catalog_year": "2025-2026",
+    "url": "https://catalog.uwp.edu/programs/business/accounting-major/",
+    "program_type": "MAJOR",
+    "blocks": [
+      {
+        "name": "A minimum grade of C or better is required in each course below (C- is not acceptable)",
+        "courses": [
+          [
+            "ACCT",
+            "201"
+          ],
+          [
+            "ACCT",
+            "202"
+          ],
+          [
+            "BUS",
+            "272"
+          ],
+          [
+            "QM",
+            "210"
+          ],
+          [
+            "QM",
+            "310"
+          ]
+        ],
+        "rule": "ALL_OF",
+        "n_required": null,
+        "credits_required": null,
+        "manual_notes": []
+      },
+      {
+        "name": "A minimum grade of C or better is required in each course below (C- is not acceptable) - Required Courses",
+        "courses": [
+          [
+            "ECON",
+            "120"
+          ],
+          [
+            "ECON",
+            "121"
+          ],
+          [
+            "COMM",
+            "105"
+          ],
+          [
+            "QM",
+            "110"
+          ]
+        ],
+        "rule": "ALL_OF",
+        "n_required": null,
+        "credits_required": null,
+        "manual_notes": []
+      },
+      {
+        "name": "A minimum grade of C or better is required in each course below (C- is not acceptable) - Advanced Writing Course",
+        "courses": [
+          [
+            "ENGL",
+            "201"
+          ],
+          [
+            "ENGL",
+            "202"
+          ],
+          [
+            "ENGL",
+            "204"
+          ]
+        ],
+        "rule": "N_OF",
+        "n_required": 1,
+        "credits_required": null,
+        "manual_notes": []
+      },
+      {
+        "name": "Fundamental Preparation Courses",
+        "courses": [],
+        "rule": "ALL_OF",
+        "n_required": null,
+        "credits_required": 15.0,
+        "manual_notes": []
+      },
+      {
+        "name": "Business Preparation Courses",
+        "courses": [],
+        "rule": "ALL_OF",
+        "n_required": null,
+        "credits_required": 15.0,
+        "manual_notes": []
+      },
+      {
+        "name": "Students must acquire an overall average GPA of 2.5 in 300/400 level foundation, major and concentration courses",
+        "courses": [
+          [
+            "QM",
+            "319"
+          ],
+          [
+            "MIS",
+            "320"
+          ],
+          [
+            "FIN",
+            "330"
+          ],
+          [
+            "MGT",
+            "349"
+          ],
+          [
+            "MKT",
+            "350"
+          ],
+          [
+            "BUS",
+            "495"
+          ]
+        ],
+        "rule": "ALL_OF",
+        "n_required": null,
+        "credits_required": null,
+        "manual_notes": []
+      },
+      {
+        "name": "Business Foundation Core Courses",
+        "courses": [],
+        "rule": "ALL_OF",
+        "n_required": null,
+        "credits_required": 18.0,
+        "manual_notes": []
+      },
+      {
+        "name": "Accounting Courses",
+        "courses": [],
+        "rule": "ALL_OF",
+        "n_required": null,
+        "credits_required": 72.0,
+        "manual_notes": []
+      },
+      {
+        "name": "Accounting Courses - Required Major Courses",
+        "courses": [
+          [
+            "ACCT",
+            "301"
+          ],
+          [
+            "ACCT",
+            "302"
+          ],
+          [
+            "ACCT",
+            "305"
+          ],
+          [
+            "ACCT",
+            "306"
+          ],
+          [
+            "ACCT",
+            "400"
+          ],
+          [
+            "ACCT",
+            "403"
+          ],
+          [
+            "ACCT",
+            "404"
+          ],
+          [
+            "BUS",
+            "372"
+          ]
+        ],
+        "rule": "ALL_OF",
+        "n_required": null,
+        "credits_required": null,
+        "manual_notes": []
+      },
+      {
+        "name": "Accounting Courses - Recommended Course",
+        "courses": [
+          [
+            "ACCT",
+            "405"
+          ]
+        ],
+        "rule": "ALL_OF",
+        "n_required": null,
+        "credits_required": null,
+        "manual_notes": []
+      }
+    ]
+  },
+  {
+    "name": "Anthropology Major (BA)",
+    "catalog_year": "2025-2026",
+    "url": "https://catalog.uwp.edu/programs/geography-anthropology/anthropology-major/",
+    "program_type": "MAJOR",
+    "blocks": [
+      {
+        "name": "Required Courses",
+        "courses": [
+          [
+            "ANTH",
+            "100"
+          ],
+          [
+            "ANTH",
+            "200"
+          ],
+          [
+            "ANTH",
+            "201"
+          ],
+          [
+            "ANTH",
+            "202"
+          ],
+          [
+            "ANTH",
+            "300"
+          ],
+          [
+            "ANTH",
+            "302"
+          ],
+          [
+            "ANTH",
+            "312"
+          ],
+          [
+            "ANTH",
+            "491"
+          ],
+          [
+            "GEOG",
+            "350"
+          ],
+          [
+            "GEOG",
+            "495"
+          ],
+          [
+            "SOCA",
+            "250"
+          ]
+        ],
+        "rule": "ALL_OF",
+        "n_required": null,
+        "credits_required": null,
+        "manual_notes": []
+      },
+      {
+        "name": "Elective Courses",
+        "courses": [
+          [
+            "ANTH",
+            "227"
+          ],
+          [
+            "ANTH",
+            "228"
+          ],
+          [
+            "ANTH",
+            "310"
+          ],
+          [
+            "ANTH",
+            "320"
+          ],
+          [
+            "ANTH",
+            "327"
+          ],
+          [
+            "ANTH",
+            "357"
+          ],
+          [
+            "ANTH",
+            "362"
+          ],
+          [
+            "ANTH",
+            "382"
+          ],
+          [
+            "ANTH",
+            "390"
+          ],
+          [
+            "ANTH",
+            "402"
+          ],
+          [
+            "ANTH",
+            "455"
+          ],
+          [
+            "ANTH",
+            "490"
+          ],
+          [
+            "ANTH",
+            "494"
+          ],
+          [
+            "ANTH",
+            "499"
+          ],
+          [
+            "GEOG",
+            "308"
+          ],
+          [
+            "GEOG",
+            "323"
+          ],
+          [
+            "GEOG",
+            "360"
+          ],
+          [
+            "GEOG",
+            "410"
+          ]
+        ],
+        "rule": "N_OF",
+        "n_required": 9,
+        "credits_required": null,
+        "manual_notes": []
+      }
+    ]
+  }
+]

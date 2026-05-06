@@ -1,0 +1,23 @@
+{
+  "programs": 2,
+  "blocks_total": 7,
+  "blocks_empty_courses": [
+    {
+      "program": "Applied Professional Studies (MA)",
+      "catalog_year": "2025-2026",
+      "block": "Concentration Area Courses"
+    },
+    {
+      "program": "Applied Professional Studies (MA)",
+      "catalog_year": "2025-2026",
+      "block": "Content Expertise for Professional Educators"
+    }
+  ],
+  "manual_requirements": [],
+  "rules": {
+    "ALL_OF": 3,
+    "ANY_OF": 0,
+    "N_OF": 4,
+    "CREDITS_OF": 0
+  }
+}
